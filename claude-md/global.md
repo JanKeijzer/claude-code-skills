@@ -5,6 +5,7 @@
 - Code comments in English
 - Communication in Dutch (unless context requires otherwise)
 - Commit messages in English, concise and descriptive
+- `docker compose` (with space), never `docker-compose` (with hyphen)
 
 ## Test Quality Policy
 
@@ -36,3 +37,23 @@
 - Before importing classes, verify they exist
 - Follow existing patterns in the codebase — read before writing
 - If ANY verification fails, STOP and reassess
+- DRY: check if similar logic already exists before implementing; create shared functions instead of duplicating
+- No magic strings/numbers: use constants, enums, or configuration for all business logic values
+- Remove obsolete code always. Never keep old files "just in case"
+
+## Documentation Standards
+
+- Focus on current purpose, not implementation history
+- Include usage guidance and critical warnings
+- No historical changelogs in code documentation
+
+## Frontend Standards
+
+- Loading indicators only after >500ms delay (debounce to prevent flickering)
+- All user-facing text via translation keys (`t('key')`), never hardcoded strings
+- When using an API client with baseURL: use relative URLs (prevent double prefixes)
+
+## Claude Code Workarounds
+
+- Bash tool: always save API responses to a file first, then read the file
+- Never use command substitution with pipes for API data
