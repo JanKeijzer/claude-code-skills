@@ -154,11 +154,8 @@ Handle environment configuration across deployment stages:
 Implement and enforce branching conventions:
 
 **Branch naming:**
-- Issue-based branches (default): `issue-<number>-<description>`
-- Feature branches (no issue): `feature/<description>`
-- Infrastructure: `infra/<description>`
-- Hotfix: `hotfix/<description>`
-- Bug fix: `fix/<description>`
+- All branches follow the pattern: `issue-<number>-<description>`
+- No exceptions — every change has an issue, so every branch includes the issue number
 
 **Branch protection rules:**
 - Require PR reviews before merge
