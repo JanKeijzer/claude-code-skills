@@ -4,12 +4,13 @@ A collection of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) sk
 
 ## Philosophy
 
-This toolkit separates concerns into two layers:
+This toolkit separates concerns into three layers:
 
 - **Skills** define **procedures** — the steps to follow when performing a task (e.g., how to implement an issue, how to decompose work)
+- **Agents** define **constrained roles** — specialized sub-agents with restricted tool access for specific domains (e.g., read-only infrastructure analysis, deployment-scoped automation)
 - **CLAUDE.md** defines **policies** — the standards and conventions that apply across all work (e.g., test quality, code quality, communication preferences)
 
-Skills reference policies from CLAUDE.md rather than duplicating them.
+Skills and agents reference policies from CLAUDE.md rather than duplicating them.
 
 ## Installation
 
@@ -19,11 +20,12 @@ cd ~/Projects/claude-code-toolkit
 ./install.sh
 ```
 
-This creates two symlinks:
+This creates three symlinks:
 - `~/.claude/skills` → `skills/` (all skills auto-discovered)
+- `~/.claude/agents` → `agents/` (sub-agents auto-discovered)
 - `~/.claude/CLAUDE.md` → `claude-md/global.md` (global policies)
 
-Restart Claude Code after installation. Skills are auto-discovered from `~/.claude/skills/*/SKILL.md`.
+Restart Claude Code after installation. Skills are auto-discovered from `~/.claude/skills/*/SKILL.md`. Agents are auto-discovered from `~/.claude/agents/*.md`.
 
 ### Project Template
 
@@ -35,10 +37,44 @@ cp ~/Projects/claude-code-toolkit/claude-md/project-template.md /path/to/your/pr
 
 Then fill in the sections relevant to your project.
 
+## Sub-Agents
+
+The toolkit includes two specialized sub-agents for infrastructure management. They work together with a clear separation of concerns:
+
+```
+infra-maintainer (advises) → GitHub issue → /implement (code) → devops-automator (deploy)
+                                           ↑
+                              or: human creates issue directly
+```
+
+| Agent | Role | Tools | Model |
+|-------|------|-------|-------|
+| `infra-maintainer` | Read-only infrastructure advisor. Analyzes, diagnoses, and recommends — never makes direct changes. | Read, Grep, Glob, Bash (diagnostics only) | Sonnet |
+| `devops-automator` | Deployment engineer. The only path to production — always through the pipeline. | Read, Write, Edit, Grep, Glob, Bash | Sonnet |
+
+### infra-maintainer
+
+Infrastructure advisor for self-managed VPS servers. Operates in **read-only** mode (no Write/Edit tools). Runs diagnostic commands, assesses risks, and proposes improvements as GitHub issues (with `proposal` + `infra` labels) — but only after human confirmation.
+
+**Analysis domains:** server hardening, reverse proxy & SSL, backup & disaster recovery, monitoring & uptime, Docker management, security updates & vulnerability management.
+
+### devops-automator
+
+Deployment engineer responsible for CI/CD pipelines and the path to production. Every change follows the same path: branch → test → PR → review → merge → deploy. No exceptions.
+
+**Scope:** GitHub Actions workflows, deployment strategies (lightweight restart vs. full rebuild), Docker image management, environment & secret management, branch protection rules.
+
+### Why no "software engineer" agent?
+
+Agents are valuable because of their **constraints**: infra-maintainer is read-only, devops-automator is deployment-scoped. A "software engineer" agent would need all tools with no specific restrictions — that's just Claude Code itself. The `/implement` skill already encapsulates the full workflow: issue → branch → code + tests → PR.
+
 ## Repository Structure
 
 ```
 claude-code-toolkit/
+├── agents/                    ← sub-agent definitions
+│   ├── infra-maintainer.md    ← read-only infrastructure advisor
+│   └── devops-automator.md    ← deployment engineer
 ├── skills/                    ← skill definitions (procedures)
 │   ├── implement/
 │   ├── decompose/
