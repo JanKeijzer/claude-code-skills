@@ -15,6 +15,14 @@ The user provides an issue number: `$ARGUMENTS`
 
 FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS.
 
+## Tool Rules
+
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is ONLY for `gh` commands (issue view/edit/create/list)
+- Write is ONLY for writing issue bodies to `/tmp/` — NEVER use heredoc or `cat <<` in Bash
+
 ## Phase 1: Understand Current State
 
 1. Fetch issue details: `gh issue view $ARGUMENTS --json title,body,labels,assignees`

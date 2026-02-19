@@ -25,6 +25,14 @@ The user provides: `$ARGUMENTS`
 /extend            # Detect parent from branch (issue-723-...)
 ```
 
+## Tool Rules
+
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is for `gh` commands, `git` commands, and `~/.claude/bin/` scripts only
+- NEVER use heredoc or `cat <<` in Bash — use the Write tool to write to `/tmp/`, then reference the file with `--body-file`
+
 ## Workflow
 
 ### Step 1: Identify Parent Issue
@@ -110,11 +118,8 @@ Create these sub-issues?
 
 ### Step 6: Create New Sub-Issues
 
-For each confirmed sub-issue:
-```bash
-gh issue create \
-  --title "[Parent #$PARENT_ISSUE] [Sub-issue title]" \
-  --body "$(cat <<'EOF'
+For each confirmed sub-issue, first write the body using the Write tool to `/tmp/sub-issue-<n>.md`:
+```markdown
 ## Parent Issue
 Part of #[parent-issue] ([parent title])
 
@@ -132,8 +137,11 @@ Part of #[parent-issue] ([parent title])
 ## Acceptance Criteria
 - [ ] Criterion 1
 - [ ] Criterion 2
-EOF
-)"
+```
+
+Then create the issue:
+```bash
+gh issue create --title "[Parent #$PARENT_ISSUE] [Sub-issue title]" --body-file /tmp/sub-issue-<n>.md
 ```
 
 ### Step 7: Update Tracking PR

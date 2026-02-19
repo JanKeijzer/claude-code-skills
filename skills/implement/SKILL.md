@@ -15,6 +15,14 @@ The user provides an issue number: `$ARGUMENTS`
 
 FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS. MUST use ~/.claude/bin/git-find-base-branch for base branch detection for the PR.
 
+## Tool Rules
+
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is for `gh` commands, `git` commands, running tests, and build tools only
+- NEVER use heredoc or `cat <<` in Bash — use the Write tool to write to `/tmp/`, then reference the file
+
 Follow the Test Quality Policy and Anti-Patterns from CLAUDE.md throughout all phases.
 
 ## Phase 1: Discovery & Planning

@@ -25,6 +25,14 @@ The user provides: `$ARGUMENTS`
 /bug 724 "Webhook signature fails in test mode"   # Explicit parent #724
 ```
 
+## Tool Rules
+
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is for `gh` commands, `git` commands, and `~/.claude/bin/` scripts only
+- NEVER use heredoc or `cat <<` in Bash — use the Write tool to write to `/tmp/`, then reference the file with `--body-file`
+
 ## Workflow
 
 ### Step 1: Parse Arguments and Detect Parent Issue
@@ -67,17 +75,14 @@ Search for the tracking/parent PR:
 
 If parent is a sub-issue (e.g., #724), also find the grandparent tracking PR:
 ```bash
-# Check if parent issue mentions a parent
-gh issue view [parent-issue] --json body | grep -oP 'Parent issue: #\K\d+'
+gh issue view [parent-issue] --json body
 ```
+Then parse the JSON output for `Parent issue: #\d+` to find the grandparent issue number.
 
 ### Step 5: Create Bug Issue
 
-```bash
-gh issue create \
-  --title "🐛 [Parent #XXX] Bug: [bug title]" \
-  --label "bug" \
-  --body "$(cat <<'EOF'
+First write the body using the Write tool to `/tmp/bug-issue.md`:
+```markdown
 ## Parent Issue
 Related to #[parent-issue] ([parent title])
 
@@ -101,8 +106,11 @@ Related to #[parent-issue] ([parent title])
 
 ---
 _This bug blocks the completion of #[parent-issue]_
-EOF
-)"
+```
+
+Then create the issue:
+```bash
+gh issue create --title "🐛 [Parent #XXX] Bug: [bug title]" --label "bug" --body-file /tmp/bug-issue.md
 ```
 
 ### Step 6: Add to Tracking PR

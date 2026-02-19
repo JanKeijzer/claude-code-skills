@@ -13,6 +13,14 @@ Help the user break down a large GitHub issue into manageable sub-issues, tracke
 
 The user provides an issue number: `$ARGUMENTS`
 
+## Tool Rules
+
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is for `gh` commands, `git` commands, and `~/.claude/bin/` scripts only
+- NEVER use heredoc or `cat <<` in Bash — use the Write tool to write to `/tmp/`, then reference the file with `--body-file`
+
 ## Workflow
 
 ### Step 1: Fetch and Analyze the Issue
@@ -51,7 +59,7 @@ Does this breakdown look correct? I can:
 Check if branch exists:
 ```bash
 git fetch origin
-git branch -a | grep "issue-$ARGUMENTS" || echo "Branch does not exist"
+git branch -a --list "*issue-$ARGUMENTS*"
 ```
 
 If no branch exists, ask if user wants to create it:
@@ -121,9 +129,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Step 5: Create Sub-Issues (if user confirms)
 
-For each sub-issue:
-```bash
-gh issue create --title "[Parent #] Sub-issue: [Title]" --body "$(cat <<'EOF'
+For each sub-issue, first write the body using the Write tool to `/tmp/sub-issue-<n>.md`:
+```markdown
 Parent issue: #[parent-number]
 
 ## Scope
@@ -140,8 +147,11 @@ Parent issue: #[parent-number]
 ## Dependencies
 - Blocked by: [list or "None"]
 - Blocks: [list or "None"]
-EOF
-)"
+```
+
+Then create the issue:
+```bash
+gh issue create --title "[Parent #] Sub-issue: [Title]" --body-file /tmp/sub-issue-<n>.md
 ```
 
 ### Step 5b: Verify Created Sub-Issues

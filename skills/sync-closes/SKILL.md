@@ -13,6 +13,14 @@ Ensure all sub-issues referenced in a tracking PR are included in the "Closes #X
 
 The user provides a PR number: `$ARGUMENTS`
 
+## Tool Rules
+
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is for `gh` commands and `~/.claude/bin/` scripts only
+- NEVER use heredoc or `cat <<` in Bash — use the Write tool to write to `/tmp/`, then reference the file with `--body-file`
+
 ## Workflow
 
 ### Step 1: Fetch PR Body
@@ -131,8 +139,10 @@ If you need to check whether any referenced issues are already closed, fetch the
 ### Step 7: Verify
 
 ```bash
-gh pr view $ARGUMENTS --json body | grep -o "Closes #[0-9]*" | sort -u
+gh pr view $ARGUMENTS --json body
 ```
+
+Parse the JSON output to extract and list all `Closes #\d+` statements.
 
 Show confirmation:
 ```markdown
