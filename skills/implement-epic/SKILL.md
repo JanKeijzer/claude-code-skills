@@ -7,7 +7,7 @@ user-invocable: true
 
 # Implement Epic
 
-Automatically implement all sub-issues of a parent epic in dependency order: branch per issue, code + tests, PR against feature branch, auto-merge, and continue to the next issue.
+Automatically implement all sub-issues of a parent epic in dependency order. Each sub-issue is implemented by a **sub-agent with its own context window**, keeping the main session lightweight for orchestration.
 
 ## Input
 
@@ -26,6 +26,28 @@ FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS. This skill runs autonomously — no con
 - For batch operations on multiple issues, use `~/.claude/bin/` scripts (e.g., `batch-issue-status.sh`, `batch-issue-view.sh`) — NEVER use `for` loops in Bash
 
 Follow the Test Quality Policy and Anti-Patterns from CLAUDE.md throughout all phases.
+
+## Architecture
+
+```
+Main session (orchestrator):
+├── Phase 0: Setup — parse epic, determine waves, create feature branch + tracking PR
+├── Wave 1:
+│   ├── Task agent → implement issue #A (own context window)
+│   │   └── returns: { status: "success", pr: 42 } or { status: "failed", error: "..." }
+│   ├── Task agent → implement issue #B (own context window)
+│   ├── Handle results: update tracking PR
+│   └── (repeat for all issues in wave)
+├── Wave 2-N: same pattern
+└── Phase Final: summary
+```
+
+The main session NEVER implements code itself. It only:
+- Parses the epic and determines execution order
+- Spawns Task agents for each sub-issue
+- Handles results (success/failure/skip)
+- Updates the tracking PR
+- Creates bug issues on failure
 
 ## Phase 0: Setup
 
@@ -49,14 +71,16 @@ Group sub-issues into waves based on dependencies:
 - **Wave 2:** Issues that only depend on wave 1 issues
 - **Wave N:** Issues that only depend on issues in earlier waves
 
-Issues within the same wave are implemented sequentially.
+Issues within the same wave are implemented sequentially (each needs the branch state from the previous).
 
 ### Step 4: Read project context
 
-Read all CLAUDE.md files in the project (root, frontend, backend — whatever exists) to understand:
+Read all CLAUDE.md files in the project (root, frontend, backend — whatever exists) and collect:
 - Tech stack and project structure
 - Test commands and validation commands
 - Code quality policies
+
+Store this as `project_context` — you will pass it to each sub-agent.
 
 ### Step 5: Check/create feature branch
 
@@ -70,6 +94,8 @@ If the feature branch exists, check it out. Otherwise create it:
 git checkout -b issue-$ARGUMENTS-<description>
 ```
 
+Store the feature branch name as `feature_branch`.
+
 ### Step 6: Check/create tracking PR
 
 Find existing tracking PR:
@@ -82,7 +108,7 @@ If no tracking PR exists, create a draft PR against `develop` using the Write to
 gh pr create --draft --title "<Epic title>" --base develop --body-file /tmp/tracking-pr-body.md
 ```
 
-Store the tracking PR number for later updates.
+Store the tracking PR number as `tracking_pr`.
 
 ### Step 7: Show overview and start
 
@@ -99,141 +125,137 @@ Process each wave sequentially. Within each wave, process sub-issues sequentiall
 
 ### Per sub-issue:
 
-#### Step 1: Create sub-branch
+#### Step 1: Prepare the feature branch
+
+Before spawning the sub-agent, ensure the feature branch is up to date:
 
 ```bash
-git checkout <feature-branch>
-git pull origin <feature-branch>
-git checkout -b issue-<N>-<description>
+git checkout <feature_branch>
+git pull origin <feature_branch>
 ```
 
-#### Step 2: Read issue
+#### Step 2: Fetch issue details
 
 ```bash
 gh issue view <N> --json title,body,labels
 ```
 
-#### Step 3: Read codebase
+Store the issue title and body — you need this for the sub-agent prompt.
 
-Based on the issue scope, read relevant files:
-- Use Glob to find related files
-- Use Grep to search for relevant patterns
-- Read actual source files you plan to modify
-- Check model attributes, existing patterns, imports
+#### Step 3: Spawn sub-agent via Task tool
 
-#### Step 4: Implement
+Use the Task tool with `subagent_type: "general-purpose"` to implement the sub-issue. The sub-agent gets its own context window and full tool access.
 
-Write code and tests following:
-- CLAUDE.md policies (test quality, code quality, anti-patterns)
-- Existing codebase patterns
-- Issue acceptance criteria
+**The prompt must include everything the sub-agent needs** (it has no access to the main session's context):
 
-#### Step 5: Test
+```
+Implement GitHub issue #<N> for epic #$ARGUMENTS.
 
-Run the project-specific test/validate command found in CLAUDE.md:
-- Check for: `npm run validate:all`, `make validate`, `./validate.sh`, `pytest`, etc.
-- Run the relevant tests
-- Show test output
+## Issue
+Title: <title>
+Body: <full issue body>
 
-#### Step 6: Fix failures (up to 3 attempts)
+## Project Context
+<project_context from Phase 0 Step 4 — CLAUDE.md contents, tech stack, test commands>
 
-If tests fail:
-1. Read the error carefully
-2. Fix the root cause (not the symptom)
-3. Re-run tests
-4. Repeat up to 3 times total
+## Branch Setup
+- Feature branch: <feature_branch>
+- Create sub-branch: issue-<N>-<description>
+- Base your work on the feature branch (already checked out)
 
-#### Step 7a: On unresolvable failure
+## Instructions
 
-If after 3 attempts the tests still fail:
+1. Create and checkout branch: `git checkout -b issue-<N>-<description>`
+2. Read the codebase: use Glob, Grep, Read to understand relevant files
+3. Implement the changes following the project policies above
+4. Write tests following the Test Quality Policy
+5. Run tests: <specific test command from CLAUDE.md>
+6. If tests fail: fix and retry (up to 3 attempts total)
+7. If tests pass:
+   - Commit with a descriptive message (use Write to /tmp/commit-msg.txt, then `git commit -F /tmp/commit-msg.txt`)
+   - Push: `git push -u origin issue-<N>-<description>`
+   - Write PR body to /tmp/pr-body.md, then create PR:
+     `gh pr create --title "<title>" --base <feature_branch> --body-file /tmp/pr-body.md`
+   - Auto-merge: `gh pr merge <pr-number> --merge --delete-branch`
+   - Return to feature branch: `git checkout <feature_branch> && git pull origin <feature_branch>`
 
-1. **Create bug issue** — write body to `/tmp/bug-epic.md`:
+## Tool Rules
+- Use Glob to find files — NEVER use `find` or `ls` via Bash
+- Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
+- Use Read to read files — NEVER use `cat`, `head`, or `tail` via Bash
+- Bash is for `gh` commands, `git` commands, running tests, and `~/.claude/bin/` scripts only
+- NEVER use heredoc or `cat <<` in Bash — use Write to `/tmp/`, then reference the file
+- Use Write to create new files — NEVER use `mkdir` via Bash
+
+## Response Format
+
+When done, respond with EXACTLY one of these formats:
+
+SUCCESS:
+PR_NUMBER: <number>
+SUMMARY: <one-line description of what was implemented>
+
+FAILED:
+ERROR: <description of what went wrong>
+ATTEMPTS: <what was tried>
+LAST_ERROR_OUTPUT: <relevant error output>
+```
+
+#### Step 4: Handle sub-agent result
+
+Parse the sub-agent's response:
+
+**On success** (response contains `SUCCESS`):
+- Extract PR number and summary
+- Record: issue #N → ✅ Complete, PR #X
+
+**On failure** (response contains `FAILED`):
+1. **Create bug issue** — write body to `/tmp/bug-epic-<N>.md`:
 
 ```markdown
 ## Context
 - Epic: #$ARGUMENTS
 - Sub-issue: #<N> — <title>
-- Feature branch: <feature-branch>
+- Feature branch: <feature_branch>
 
 ## Error
-<error output from test/validation>
+<error from sub-agent response>
 
 ## What Was Attempted
-1. <description of implementation>
-2. <fix attempt 1>
-3. <fix attempt 2>
-4. <fix attempt 3>
+<attempts from sub-agent response>
+
+## Last Error Output
+<last_error_output from sub-agent response>
 
 ## Suggested Next Steps
-- <investigation suggestions>
+- Investigate the error manually
+- Check if dependencies are correctly set up
 ```
 
 ```bash
-gh issue create --title "🐛 [Epic #$ARGUMENTS] Bug: <description>" --label bug --body-file /tmp/bug-epic.md
+gh issue create --title "🐛 [Epic #$ARGUMENTS] Bug: <description>" --label bug --body-file /tmp/bug-epic-<N>.md
 ```
 
-2. **Add bug to tracking PR** — update the tracking table and Closes statements
-3. **Clean up failed branch:**
+2. **Clean up failed branch** (if it was pushed):
 
 ```bash
-git checkout <feature-branch>
+git checkout <feature_branch>
 git branch -D issue-<N>-<description>
 ```
 
-4. **Mark dependent issues as skipped** — any issue that depends on this failed issue cannot proceed. Log which issues are skipped and why.
-5. **Continue** with the next non-blocked issue.
+3. **Mark dependent issues as skipped** — any issue in later waves that depends on this failed issue cannot proceed. Track which issues are skipped and why.
 
-#### Step 7b: On success
-
-1. **Commit** with a descriptive message referencing the issue:
-
-```bash
-git add <specific-files>
-git commit -F /tmp/commit-msg-<N>.txt
-```
-
-2. **Push and create PR** — write PR body to `/tmp/pr-body-<N>.md`:
-
-```markdown
-Closes #<N>
-
-## Summary
-<what was implemented>
-
-## Test Plan
-- <what was tested>
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-```
-
-```bash
-git push -u origin issue-<N>-<description>
-gh pr create --title "<concise title>" --base <feature-branch> --body-file /tmp/pr-body-<N>.md
-```
-
-3. **Auto-merge:**
-
-```bash
-gh pr merge <pr-number> --merge --delete-branch
-```
-
-4. **Return to feature branch:**
-
-```bash
-git checkout <feature-branch>
-git pull origin <feature-branch>
-```
-
-#### Step 8: Update tracking PR
+#### Step 5: Update tracking PR
 
 After each sub-issue (success or failure), update the tracking PR:
 - Update status in the tracking table (✅ Complete, ❌ Failed, ⏭️ Skipped)
 - Update progress percentage
 - Add PR link for successful issues
+- Add bug issue link for failures
 
 Write updated body to `/tmp/tracking-pr-update.md`, then:
 ```bash
-gh pr edit <tracking-pr-number> --body-file /tmp/tracking-pr-update.md
+gh pr edit <tracking_pr> --body-file /tmp/tracking-pr-update.md
 ```
 
 ## Phase Final: Wrap-up
@@ -253,7 +275,7 @@ Display a final report:
 | # | Issue | Status | PR |
 |---|-------|--------|-----|
 | 1 | #XX — Title | ✅ Merged | #YY |
-| 2 | #XX — Title | ❌ Failed | - |
+| 2 | #XX — Title | ❌ Failed → Bug #ZZ | - |
 | 3 | #XX — Title | ⏭️ Skipped (depends on #XX) | - |
 
 ### Statistics
@@ -269,10 +291,10 @@ The tracking PR is ready for manual review and merge to develop.
 
 ## Error Handling Summary
 
-When a sub-issue implementation fails:
+When a sub-agent reports failure:
 1. Create a bug issue with full context (error, attempts, suggestions)
 2. Add the bug issue to the tracking PR table
-3. Delete the failed sub-branch (local only — don't delete remote if not pushed)
+3. Delete the failed sub-branch (local + remote if pushed)
 4. Check dependency graph: if issue X fails and issue Y depends on X → skip Y with a note
 5. Continue with the next non-blocked issue in the current or next wave
 
@@ -281,7 +303,7 @@ When a sub-issue implementation fails:
 | Emoji | Meaning |
 |-------|---------|
 | ⏳ | Pending — not started |
-| 🔄 | In Progress — currently being implemented |
+| 🔄 | In Progress — sub-agent running |
 | ✅ | Complete — PR merged |
 | ❌ | Failed — bug issue created |
 | ⏭️ | Skipped — blocked by failed dependency |
