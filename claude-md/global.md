@@ -57,4 +57,4 @@
 
 - Bash tool: always save API responses to a file first, then read the file
 - Never use command substitution with pipes for API data
-- Never use heredoc in Bash commands (not `cat << EOF`, not in git commit). Multi-line Bash commands don't match permission patterns like `Bash(git *)`. Instead: use the Write tool to write to `/tmp/`, then reference the file in Bash (e.g., `git commit -F /tmp/commit-msg`, `gh issue create --body-file /tmp/issue-body.md`).
+- Never write files via Bash (no `echo >`, `cat <<`, `tee`, heredoc). These don't match permission patterns like `Bash(git *)`. Instead: use the Write tool to write to `/tmp/`, then reference the file in Bash (e.g., `git commit -F /tmp/commit-msg`, `gh issue create --body-file /tmp/issue-body.md`).
