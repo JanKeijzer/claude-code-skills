@@ -35,7 +35,7 @@ The user provides: `$ARGUMENTS`
 - NEVER use `python3 -c`, `sed`, or `awk` for file modifications — use Grep to find occurrences, then Edit to replace them
 - Use Write to create new files — NEVER use `mkdir` via Bash (Write auto-creates parent directories)
 - Use `git rm` to delete files — NEVER use `rm` via Bash
-- For batch operations on multiple issues, use `~/.claude/bin/` scripts (e.g., `batch-issue-status.sh`, `batch-issue-view.sh`) — NEVER use `for` loops in Bash
+- For batch operations on multiple issues, ALWAYS use `~/.claude/bin/` scripts (e.g., `batch-issue-status.sh`, `batch-issue-view.sh`) — NEVER use `for` loops or chained `&&` commands to repeat `gh` calls
 
 ## Workflow
 
