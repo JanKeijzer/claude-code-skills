@@ -45,9 +45,11 @@ Then fill in the sections relevant to your project. The settings template includ
 
 ## Sub-Agents
 
-The toolkit includes two specialized sub-agents for infrastructure management. They work together with a clear separation of concerns:
+The toolkit includes specialized sub-agents for issue creation, infrastructure management, and deployment. They work together with a clear separation of concerns:
 
 ```
+Rough idea → issue-crafter → Well-defined issues → /decompose (if large) → /implement
+                                                                               ↓
 infra-maintainer (advises) → GitHub issue → /implement (code) → devops-automator (deploy)
                                            ↑
                               or: human creates issue directly
@@ -55,8 +57,15 @@ infra-maintainer (advises) → GitHub issue → /implement (code) → devops-aut
 
 | Agent | Role | Tools | Model |
 |-------|------|-------|-------|
+| `issue-crafter` | Translates rough ideas into well-structured GitHub issues. Asks clarifying questions, proposes issues for approval, then creates them. | Read, Grep, Glob, Bash, Write | Sonnet |
 | `infra-maintainer` | Read-only infrastructure advisor. Analyzes, diagnoses, and recommends — never makes direct changes. | Read, Grep, Glob, Bash (diagnostics only) | Sonnet |
 | `devops-automator` | Deployment engineer. The only path to production — always through the pipeline. | Read, Write, Edit, Grep, Glob, Bash | Sonnet |
+
+### issue-crafter
+
+Translates rough ideas and descriptions into well-structured GitHub issues. Explores the codebase for context, asks clarifying questions about scope and acceptance criteria, and presents structured proposals for approval before creating anything. Recommends `/decompose` for issues that are too large for a single PR.
+
+**Workflow:** rough idea → codebase exploration → clarifying questions → issue proposal → human approval → `gh issue create`
 
 ### infra-maintainer
 
@@ -107,6 +116,7 @@ To allow these scripts in your project's `.claude/settings.json`:
 ```
 claude-code-toolkit/
 ├── agents/                    ← sub-agent definitions
+│   ├── issue-crafter.md       ← idea → well-defined GitHub issues
 │   ├── infra-maintainer.md    ← read-only infrastructure advisor
 │   └── devops-automator.md    ← deployment engineer
 ├── bin/                       ← helper scripts (batch operations, git utilities)
