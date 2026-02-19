@@ -29,6 +29,12 @@ FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS. This skill runs autonomously — no con
 
 Follow the Test Quality Policy and Anti-Patterns from CLAUDE.md throughout all phases.
 
+**HARD BOUNDARIES — NEVER cross these:**
+- NEVER merge the tracking PR (the user reviews and merges manually)
+- NEVER close the parent issue (closing happens automatically when the tracking PR is merged)
+- NEVER push directly to `main` or `develop`
+- Only merge sub-issue PRs into the **feature branch** — nothing else
+
 ## Architecture
 
 ```
@@ -181,6 +187,11 @@ Body: <full issue body>
    - Auto-merge: `gh pr merge <pr-number> --merge --delete-branch`
    - Return to feature branch: `git checkout <feature_branch> && git pull origin <feature_branch>`
 
+## HARD BOUNDARIES
+- Your PR target is the FEATURE BRANCH (`<feature_branch>`) — NEVER target `main` or `develop`
+- NEVER close any issues — that happens automatically when the tracking PR is merged by the user
+- Your scope is ONE sub-issue only — do not touch other issues or the tracking PR
+
 ## Tool Rules
 - Use Glob to find files — NEVER use `find` or `ls` via Bash
 - Use Grep to search file contents — NEVER use `grep` or `rg` via Bash
@@ -263,6 +274,8 @@ gh pr edit <tracking_pr> --body-file /tmp/tracking-pr-update.md
 ```
 
 ## Phase Final: Wrap-up
+
+**CRITICAL: NEVER merge the tracking PR. NEVER close the parent issue. NEVER push to main or develop directly. The tracking PR stays as a draft for the user to review and merge manually.**
 
 ### Step 1: Sync Closes statements
 
