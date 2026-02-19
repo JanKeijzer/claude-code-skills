@@ -51,7 +51,7 @@ Then fill in the sections relevant to your project. The settings template includ
 The toolkit includes specialized sub-agents for issue creation, infrastructure management, and deployment. They work together with a clear separation of concerns:
 
 ```
-Rough idea → issue-crafter → Well-defined issues → /decompose (if large) → /implement
+Rough idea → issue-crafter → Well-defined issues → /decompose (if large) → /implement or /implement-epic
                   ↑                                                             ↓
          /refine (existing issues)                                      devops-automator (deploy)
                                                                              ↑
@@ -128,6 +128,7 @@ claude-code-toolkit/
 ├── skills/                    ← skill definitions (procedures)
 │   ├── refine/
 │   ├── implement/
+│   ├── implement-epic/
 │   ├── decompose/
 │   ├── bug/
 │   ├── cleanup/
@@ -192,6 +193,7 @@ Global permissions (git, gh, edit, file operations) are in `~/.claude/settings.j
 | `/decompose` | `/decompose <issue>` | Break down a large issue into sub-issues with a tracking PR |
 | `/extend` | `/extend <issue>` | Add more sub-issues to an existing tracking PR |
 | `/implement` | `/implement <issue>` | Implement a GitHub issue with automated PR creation |
+| `/implement-epic` | `/implement-epic <parent-issue>` | Implement all sub-issues of an epic in dependency order |
 | `/finish` | `/finish [issue] [base]` | Commit, close issue, merge to base branch, cleanup |
 | `/bug` | `/bug "<title>"` | Create a bug sub-issue and add it to the tracking PR |
 | `/update-tracking` | `/update-tracking <pr>` | Update tracking PR with current sub-issue status |
@@ -208,6 +210,7 @@ Global permissions (git, gh, edit, file operations) are in `~/.claude/settings.j
 |-------|--------|-------------|
 | `/refine` | `/refine <issue>` | Sharpen scope & acceptance criteria |
 | `/decompose` | `/decompose <issue>` | Start: break down large issue |
+| `/implement-epic` | `/implement-epic <parent-issue>` | Auto-implement all sub-issues |
 | `/extend` | `/extend <issue>` | Later: add more sub-issues |
 | `/bug` | `/bug "<title>"` | Bug found during work |
 | `/update-tracking` | `/update-tracking <pr>` | Update status table |
@@ -229,7 +232,9 @@ flowchart TD
     end
 
     subgraph phase2 [Phase 2: Implementation]
-        C --> D{Work on sub-issue}
+        C -->|manual| D{Work on sub-issue}
+        C -->|automated| AUTO[implement-epic]
+        AUTO --> J
         D -->|Bug found| E[bug command]
         E --> F[Bug issue]
         F --> G[Added to PR]
@@ -330,7 +335,39 @@ Create draft PR and sub-issues? (A/B/C)
 
 ---
 
-### 3. `/extend` - Add More Sub-Issues
+### 3. `/implement-epic` - Implement All Sub-Issues
+
+**When:** You've decomposed an epic into sub-issues and want to implement them all automatically.
+
+**What it does:**
+1. Reads the parent issue and parses sub-issues with dependencies
+2. Groups sub-issues into waves (dependency order)
+3. Per sub-issue: branch, implement, test, PR, auto-merge
+4. On failure: creates bug issue, skips dependent issues, continues
+5. Updates tracking PR after each sub-issue
+
+**Syntax:**
+```bash
+/implement-epic 723
+```
+
+**Workflow position:**
+```
+/refine → /decompose → /implement-epic → tracking PR (manual merge to develop)
+```
+
+**Difference from /implement:**
+
+| Aspect | /implement | /implement-epic |
+|--------|-----------|-----------------|
+| Scope | Single issue | All sub-issues of an epic |
+| Confirmation | Stops for plan approval | Runs autonomously |
+| PRs | One PR against base branch | One PR per sub-issue against feature branch |
+| Failure | Stops on failure | Creates bug issue, skips dependents, continues |
+
+---
+
+### 4. `/extend` - Add More Sub-Issues
 
 **When:** You've completed the first batch of sub-issues and want to tackle the next phase.
 
@@ -355,7 +392,7 @@ Create draft PR and sub-issues? (A/B/C)
 
 ---
 
-### 4. `/bug` - Create Bug Issue
+### 5. `/bug` - Create Bug Issue
 
 **When:** You find a bug while working on a sub-issue.
 
@@ -385,7 +422,7 @@ $ /bug "Signature verification fails in test mode"
 
 ---
 
-### 5. `/update-tracking` - Update Status
+### 6. `/update-tracking` - Update Status
 
 **When:** You want to update the progress in the tracking PR.
 
@@ -411,7 +448,7 @@ $ /bug "Signature verification fails in test mode"
 
 ---
 
-### 6. `/sync-closes` - Sync Closes Statements
+### 7. `/sync-closes` - Sync Closes Statements
 
 **When:** Before merging, to ensure all issues will auto-close.
 
@@ -464,12 +501,25 @@ Add "Closes #730" to PR? (y/n)
 # ✅ Progress: 0/3 (0%)
 ```
 
-### Step 2: Work on first sub-issues
+### Step 2: Implement all sub-issues (automated)
 
 ```bash
-git checkout -b issue-724-abstraction-layer
-# ... implement ...
-# Create PR, merge to issue-723-stripe branch
+# Option A: Implement all sub-issues automatically
+/implement-epic 723
+
+# Output:
+# Wave 1: #724 (no deps)
+# Wave 2: #725 (depends on #724), #726 (depends on #724)
+#
+# Implementing #724... ✅ PR #731 merged
+# Implementing #725... ✅ PR #732 merged
+# Implementing #726... ❌ Failed → bug #730 created
+#
+# Results: 2/3 complete, 1 bug created
+
+# Option B: Implement sub-issues manually one by one
+/implement 724
+/implement 725
 ```
 
 ### Step 3: Bug found!
