@@ -20,13 +20,16 @@ cd ~/Projects/claude-code-toolkit
 ./install.sh
 ```
 
-This creates four symlinks:
+This creates four symlinks and copies one file:
 - `~/.claude/skills` → `skills/` (all skills auto-discovered)
 - `~/.claude/agents` → `agents/` (sub-agents auto-discovered)
 - `~/.claude/bin` → `bin/` (helper scripts)
 - `~/.claude/CLAUDE.md` → `claude-md/global.md` (global policies)
+- `~/.claude/settings.json` ← copied from `claude-md/settings-global.jsonc` (global permissions)
 
-Restart Claude Code after installation. Skills are auto-discovered from `~/.claude/skills/*/SKILL.md`. Agents are auto-discovered from `~/.claude/agents/*.md`.
+The settings file is copied (not symlinked) because Claude Code writes to it when you approve permissions during a session. Restart Claude Code after installation.
+
+Skills are auto-discovered from `~/.claude/skills/*/SKILL.md`. Agents are auto-discovered from `~/.claude/agents/*.md`.
 
 ### Project Template
 
@@ -144,17 +147,30 @@ claude-code-toolkit/
 │   ├── ss/
 │   ├── sync-closes/
 │   └── update-tracking/
-├── claude-md/                 ← CLAUDE.md files (policies)
+├── claude-md/                 ← CLAUDE.md files (policies) and settings
 │   ├── global.md              ← global policies → ~/.claude/CLAUDE.md
+│   ├── settings-global.jsonc  ← global permissions → ~/.claude/settings.json
 │   ├── project-template.md    ← template for project-specific CLAUDE.md
 │   └── settings-template.jsonc ← template for project-specific settings
 ├── install.sh                 ← creates symlinks
 └── README.md
 ```
 
-## CLAUDE.md Files
+## Configuration Files
 
-### Global (`claude-md/global.md`)
+### Global Settings (`claude-md/settings-global.jsonc`)
+
+Copied to `~/.claude/settings.json` by install.sh. Pre-configures permissions so Claude Code can work without constant approval prompts:
+
+- **File operations** — Write, Edit, MultiEdit (always needed)
+- **Shell utilities** — cat, grep, find, ls, etc. (read-only, low risk)
+- **File management** — mkdir, cp, mv, chmod (project scaffolding)
+- **Git & GitHub** — git, gh (with destructive operations denied)
+- **Toolkit** — helper scripts from `~/.claude/bin/`
+
+This is a copy (not symlink) because Claude Code writes to it when you approve permissions during a session.
+
+### Global CLAUDE.md (`claude-md/global.md`)
 
 Symlinked to `~/.claude/CLAUDE.md`, applies to all projects. Contains:
 

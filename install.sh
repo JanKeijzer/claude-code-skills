@@ -35,3 +35,16 @@ else
     ln -sf "$REPO_DIR/claude-md/global.md" ~/.claude/CLAUDE.md
     echo "Installed: ~/.claude/CLAUDE.md → $REPO_DIR/claude-md/global.md"
 fi
+
+# Copy global settings (not symlink — Claude Code writes to this file)
+if [ -e ~/.claude/settings.json ]; then
+    echo "~/.claude/settings.json already exists. Remove it first if you want to reinstall."
+else
+    # Strip JSONC comments to produce valid JSON
+    sed 's|//.*||' "$REPO_DIR/claude-md/settings-global.jsonc" | python3 -c "
+import sys, json
+json.dump(json.load(sys.stdin), sys.stdout, indent=2)
+print()
+" > ~/.claude/settings.json
+    echo "Installed: ~/.claude/settings.json (copied from settings-global.jsonc)"
+fi

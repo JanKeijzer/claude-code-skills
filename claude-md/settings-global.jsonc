@@ -1,0 +1,65 @@
+// Claude Code Global Settings
+//
+// Installed to ~/.claude/settings.json by install.sh (copy, not symlink).
+// Claude Code writes to this file when you approve permissions per-session,
+// so it must be a real file, not a symlink.
+//
+// After modifying this template, re-run install.sh or manually copy:
+//   cp ~/Projects/claude-code-toolkit/claude-md/settings-global.jsonc ~/.claude/settings.json
+{
+  "permissions": {
+    "allow": [
+      // ── File operations ───────────────────────────────────────
+      // Write and Edit are always needed — without these, every file
+      // modification triggers a permission prompt.
+      "Write",
+      "Edit",
+      "MultiEdit",
+
+      // ── Shell utilities ───────────────────────────────────────
+      // Basic read-only commands. Low risk, constantly used during
+      // codebase exploration.
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(sort *)",
+      "Bash(echo *)",
+      "Bash(printf *)",
+
+      // ── File management ───────────────────────────────────────
+      // Creating directories and copying/moving files. Needed for
+      // project scaffolding and file organization.
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(chmod *)",
+      "Bash(tee *)",
+
+      // ── Git & GitHub ──────────────────────────────────────────
+      // Core workflow tools. Destructive git operations (force push,
+      // reset --hard) are blocked in the deny list below.
+      "Bash(git *)",
+      "Bash(gh *)",
+
+      // ── Toolkit ───────────────────────────────────────────────
+      // Helper scripts from the toolkit's bin/ directory.
+      "Bash(~/.claude/bin/*)",
+
+      // ── System ────────────────────────────────────────────────
+      "Bash(xdg-open *)",
+      "Read(~/Pictures/Screenshots/**)"
+    ],
+    "deny": [
+      // ── Destructive operations ────────────────────────────────
+      // These can cause irreversible damage. Claude will warn and
+      // ask for confirmation if these are ever needed.
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)"
+    ]
+  }
+}
