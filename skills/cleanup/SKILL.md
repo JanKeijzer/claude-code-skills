@@ -18,7 +18,7 @@ Clean up git repository after merging a PR by running the cleanup script.
 
 Run the cleanup script:
 ```bash
-~/bin/git-cleanup-merged-branch.sh
+~/.claude/bin/git-cleanup-merged-branch.sh
 ```
 
 The script will:
@@ -40,11 +40,11 @@ The script will:
 
 ```bash
 # Auto-detect everything
-~/bin/git-cleanup-merged-branch.sh
+~/.claude/bin/git-cleanup-merged-branch.sh
 
 # Specify feature branch
-~/bin/git-cleanup-merged-branch.sh issue-123-my-feature
+~/.claude/bin/git-cleanup-merged-branch.sh issue-123-my-feature
 
 # Specify both branches
-~/bin/git-cleanup-merged-branch.sh issue-123-my-feature develop
+~/.claude/bin/git-cleanup-merged-branch.sh issue-123-my-feature develop
 ```

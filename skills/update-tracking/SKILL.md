@@ -28,14 +28,14 @@ Extract from the PR body:
 
 ### Step 2: Check Status of All Sub-Issues
 
-For each sub-issue found in the PR:
+Fetch all sub-issue statuses in one batch (outputs a JSON array):
 ```bash
-gh issue view [sub-issue-number] --json number,title,state,closed
+~/.claude/bin/batch-issue-status.sh <repo> [sub-issue-numbers...]
 ```
 
-Also check if there's a merged PR for each sub-issue:
+Also check merged and open PRs for all sub-issues in one batch:
 ```bash
-gh pr list --search "closes #[sub-issue-number]" --state merged --json number,title
+~/.claude/bin/batch-pr-for-issues.sh <repo> [sub-issue-numbers...]
 ```
 
 ### Step 3: Build Updated Status Table
@@ -92,9 +92,11 @@ Apply this update? (y/n)
 
 ### Step 7: Update the PR
 
-Only after user confirmation:
+Only after user confirmation. Write the updated body to a temp file first, then use `--body-file` to avoid long inline arguments:
 ```bash
-gh pr edit $ARGUMENTS --body "[updated body]"
+# Write updated body to temp file using the Write tool
+# Then apply it:
+gh pr edit $ARGUMENTS --body-file /tmp/pr_body.md
 ```
 
 ## Status Emoji Reference

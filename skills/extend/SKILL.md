@@ -34,8 +34,7 @@ The user provides: `$ARGUMENTS`
 PARENT_ISSUE=$ARGUMENTS
 
 # Otherwise, detect from branch
-BRANCH=$(git branch --show-current)
-PARENT_ISSUE=$(echo "$BRANCH" | grep -oP 'issue-\K\d+')
+PARENT_ISSUE=$(~/.claude/bin/extract-issue-from-branch.sh)
 ```
 
 ### Step 2: Fetch Parent Issue
@@ -52,20 +51,19 @@ Parse the issue body to identify:
 ### Step 3: Find Existing Tracking PR
 
 ```bash
-gh pr list --search "head:issue-$PARENT_ISSUE" --state open --json number,title,body
+~/.claude/bin/find-tracking-pr.sh <repo> $PARENT_ISSUE
 ```
 
-If not found by branch:
-```bash
-gh pr list --search "Closes #$PARENT_ISSUE in:body" --state open --json number,title,body
-```
-
-**If no tracking PR exists:** Suggest using `/decompose` instead.
+**If no tracking PR exists (script exits 1):** Suggest using `/decompose` instead.
 
 ### Step 4: Analyze Current State
 
-**From tracking PR, extract:**
-- Existing sub-issues (from tracking table)
+**From tracking PR, extract existing sub-issue numbers, then fetch their current status in one batch:**
+```bash
+~/.claude/bin/batch-issue-status.sh <repo> [sub-issue-numbers...]
+```
+
+**From those results, determine:**
 - Their status (✅ complete, 🔄 in progress, ⏳ pending)
 - Closes statements already present
 

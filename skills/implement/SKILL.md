@@ -13,7 +13,7 @@ Implement GitHub issue with automated workflow.
 
 The user provides an issue number: `$ARGUMENTS`
 
-FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS. MUST use ~/bin/git-find-base-branch for base branch detection for the PR.
+FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS. MUST use ~/.claude/bin/git-find-base-branch for base branch detection for the PR.
 
 Follow the Test Quality Policy and Anti-Patterns from CLAUDE.md throughout all phases.
 
@@ -94,5 +94,5 @@ Commit with descriptive message summarizing what was implemented and tested.
 2. Create PR with:
    * Title: `<concise description of change>` (no "Closes" keyword in title)
    * Body: `Closes #$ARGUMENTS\n\n<implementation summary + test checklist>`
-   * Against base branch from: `~/bin/git-find-base-branch`
+   * Against base branch from: `~/.claude/bin/git-find-base-branch`
 3. Return PR URL for review

@@ -114,8 +114,18 @@ Closes #725
 This PR tracks...
 ```
 
+Write the updated body to a temp file first, then use `--body-file`:
 ```bash
-gh pr edit $ARGUMENTS --body "[updated body]"
+# Write updated body to temp file using the Write tool
+# Then apply it:
+gh pr edit $ARGUMENTS --body-file /tmp/pr_body.md
+```
+
+### Step 6b: Verify Issue States (if needed)
+
+If you need to check whether any referenced issues are already closed, fetch their status in one batch:
+```bash
+~/.claude/bin/batch-issue-status.sh <repo> [issue-numbers...]
 ```
 
 ### Step 7: Verify

@@ -144,11 +144,21 @@ EOF
 )"
 ```
 
+### Step 5b: Verify Created Sub-Issues
+
+After creating all sub-issues, fetch their details in one batch to confirm and build the tracking table:
+```bash
+~/.claude/bin/batch-issue-view.sh <repo> [created-issue-numbers...]
+```
+
 ### Step 6: Update Parent Issue
 
 Add a tracking section to the parent issue:
+Write the updated body to a temp file first, then use `--body-file`:
 ```bash
-gh issue edit $ARGUMENTS --body "$(original body + sub-issue tracking table)"
+# Write updated body to temp file using the Write tool
+# Then apply it:
+gh issue edit $ARGUMENTS --body-file /tmp/issue_body.md
 ```
 
 ## Important Notes

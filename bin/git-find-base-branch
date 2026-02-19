@@ -1,0 +1,35 @@
+#!/bin/bash
+# Find the base branch by determining which branch has the most recent merge base
+# with the current branch. This identifies which branch the current branch was
+# most recently branched from.
+
+current=$(git branch --show-current)
+best=""
+best_date=0
+
+# Check all local branches except current
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/ | grep -v "^${current}$"); do
+    # Check if branch is ancestor of current
+    if git merge-base --is-ancestor "$branch" "$current" 2>/dev/null; then
+        merge_base=$(git merge-base "$branch" "$current")
+        commit_date=$(git show -s --format=%ct "$merge_base")
+
+        # Track the branch with most recent merge base
+        if [ "$commit_date" -gt "$best_date" ]; then
+            best_date=$commit_date
+            best=$branch
+        fi
+    fi
+done
+
+if [ -n "$best" ]; then
+    echo "$best"
+else
+    # Fallback to common defaults
+    for branch in develop master main; do
+        if git show-ref --verify --quiet refs/heads/$branch 2>/dev/null; then
+            echo "$branch"
+            exit 0
+        fi
+    done
+fi

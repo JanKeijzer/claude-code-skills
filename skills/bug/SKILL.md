@@ -35,9 +35,7 @@ The user provides: `$ARGUMENTS`
 
 **Extract from branch:**
 ```bash
-BRANCH=$(git branch --show-current)
-# Pattern: issue-XXX-... or issue-XXX
-PARENT_ISSUE=$(echo "$BRANCH" | grep -oP 'issue-\K\d+')
+PARENT_ISSUE=$(~/.claude/bin/extract-issue-from-branch.sh)
 ```
 
 **Example branch names:**
@@ -64,11 +62,7 @@ gh issue view [parent-issue] --json number,title,labels
 
 Search for the tracking/parent PR:
 ```bash
-# Try by branch pattern first
-gh pr list --search "head:issue-[parent-issue]" --state open --json number,title,body
-
-# Or by Closes reference
-gh pr list --search "Closes #[parent-issue] in:body" --state open --json number,title,body
+~/.claude/bin/find-tracking-pr.sh <repo> [parent-issue]
 ```
 
 If parent is a sub-issue (e.g., #724), also find the grandparent tracking PR:

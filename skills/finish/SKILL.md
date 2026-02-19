@@ -9,7 +9,7 @@ user-invocable: true
 
 **CRITICAL: This command MUST run in FOREGROUND mode with BLOCKING user confirmation**
 **DO NOT run in background - MUST wait for user input at Step 4**
-**MUST use ~/bin/git-find-base-branch for base branch detection**
+**MUST use ~/.claude/bin/git-find-base-branch for base branch detection**
 
 Complete the workflow for a finished issue: commit changes (including pre-commit hook modifications), close the issue, merge to base branch, and clean up.
 
@@ -24,7 +24,7 @@ The user provides: `$ARGUMENTS`
   - Provided number → uses that specific issue number
 - **base_branch**: Target branch for merging
   - Empty/omitted → uses 'auto' algorithm to detect base branch (DEFAULT)
-  - 'auto' → auto-detects base branch using ~/bin/git-find-base-branch script
+  - 'auto' → auto-detects base branch using ~/.claude/bin/git-find-base-branch script
   - Any other value → uses that specific branch name
 
 ## Examples
@@ -65,9 +65,9 @@ The user provides: `$ARGUMENTS`
   - If no match found, exit with error "Cannot detect issue number from branch name"
 
 **Step 3:** Determine base branch:
-- **CRITICAL**: ALWAYS use `~/bin/git-find-base-branch` script for auto-detection
-- If base_branch parameter is empty/omitted → Run `~/bin/git-find-base-branch`
-- If base_branch parameter is 'auto' → Run `~/bin/git-find-base-branch`
+- **CRITICAL**: ALWAYS use `~/.claude/bin/git-find-base-branch` script for auto-detection
+- If base_branch parameter is empty/omitted → Run `~/.claude/bin/git-find-base-branch`
+- If base_branch parameter is 'auto' → Run `~/.claude/bin/git-find-base-branch`
 - If base_branch parameter is provided (not 'auto') → Use that specific value
 - **NEVER use fallback to 'master'** - always use the script result
 
@@ -76,7 +76,7 @@ The user provides: `$ARGUMENTS`
 - Display resolved parameters:
   - Current branch: [branch_name]
   - Issue number: [issue_number]
-  - Base branch: [base_branch] ← MUST be result from ~/bin/git-find-base-branch
+  - Base branch: [base_branch] ← MUST be result from ~/.claude/bin/git-find-base-branch
 - Ask: "Proceed with finishing issue #[issue_number]? (y/N)"
 - **STOP EXECUTION and wait for user response**
 - **DO NOT PROCEED to Step 5 until user confirms**

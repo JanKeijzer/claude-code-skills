@@ -20,9 +20,10 @@ cd ~/Projects/claude-code-toolkit
 ./install.sh
 ```
 
-This creates three symlinks:
+This creates four symlinks:
 - `~/.claude/skills` → `skills/` (all skills auto-discovered)
 - `~/.claude/agents` → `agents/` (sub-agents auto-discovered)
+- `~/.claude/bin` → `bin/` (helper scripts)
 - `~/.claude/CLAUDE.md` → `claude-md/global.md` (global policies)
 
 Restart Claude Code after installation. Skills are auto-discovered from `~/.claude/skills/*/SKILL.md`. Agents are auto-discovered from `~/.claude/agents/*.md`.
@@ -68,6 +69,34 @@ Deployment engineer responsible for CI/CD pipelines and the path to production. 
 
 Agents are valuable because of their **constraints**: infra-maintainer is read-only, devops-automator is deployment-scoped. A "software engineer" agent would need all tools with no specific restrictions — that's just Claude Code itself. The `/implement` skill already encapsulates the full workflow: issue → branch → code + tests → PR.
 
+## Helper Scripts
+
+The `bin/` directory contains reusable shell scripts that skills call instead of using inline `for` loops.
+
+**Why?** Claude Code permissions match on the **first word** of a Bash command. An inline loop like `for issue in 15 16 17; do gh issue view $issue ...; done` gets blocked because the first word is `for`, not `gh`. By wrapping batch operations in scripts, permissions can match on the script path (`~/.claude/bin/*`).
+
+| Script | Usage | Description |
+|--------|-------|-------------|
+| `batch-issue-view.sh` | `batch-issue-view.sh <repo> <issues...>` | Fetch full issue details as JSON array |
+| `batch-issue-status.sh` | `batch-issue-status.sh <repo> <issues...>` | Fetch issue number/state/closed as JSON array |
+| `git-find-base-branch` | `git-find-base-branch` | Detect the base branch of the current branch |
+| `git-cleanup-merged-branch.sh` | `git-cleanup-merged-branch.sh [feature] [base]` | Checkout base, pull, delete merged feature branch |
+| `batch-pr-for-issues.sh` | `batch-pr-for-issues.sh <repo> <issues...>` | Find merged/open PRs linked to issues |
+| `find-tracking-pr.sh` | `find-tracking-pr.sh <repo> <issue>` | Find the tracking PR for a parent issue |
+| `extract-issue-from-branch.sh` | `extract-issue-from-branch.sh` | Extract issue number from current branch name |
+
+To allow these scripts in your project's `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(~/.claude/bin/*)"
+    ]
+  }
+}
+```
+
 ## Repository Structure
 
 ```
@@ -75,6 +104,14 @@ claude-code-toolkit/
 ├── agents/                    ← sub-agent definitions
 │   ├── infra-maintainer.md    ← read-only infrastructure advisor
 │   └── devops-automator.md    ← deployment engineer
+├── bin/                       ← helper scripts (batch operations, git utilities)
+│   ├── batch-issue-view.sh    ← fetch multiple issues as JSON array
+│   ├── batch-issue-status.sh  ← fetch issue status as JSON array
+│   ├── git-find-base-branch   ← detect base branch of current branch
+│   ├── git-cleanup-merged-branch.sh ← cleanup after PR merge
+│   ├── batch-pr-for-issues.sh ← find merged/open PRs linked to issues
+│   ├── find-tracking-pr.sh   ← find tracking PR for a parent issue
+│   └── extract-issue-from-branch.sh ← extract issue number from branch name
 ├── skills/                    ← skill definitions (procedures)
 │   ├── implement/
 │   ├── decompose/

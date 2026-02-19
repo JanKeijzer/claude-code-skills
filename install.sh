@@ -20,6 +20,14 @@ else
     echo "Installed: ~/.claude/agents → $REPO_DIR/agents/"
 fi
 
+# Symlink bin (helper scripts)
+if [ -L ~/.claude/bin ] || [ -e ~/.claude/bin ]; then
+    echo "~/.claude/bin already exists. Remove it first if you want to reinstall."
+else
+    ln -sfn "$REPO_DIR/bin" ~/.claude/bin
+    echo "Installed: ~/.claude/bin → $REPO_DIR/bin/"
+fi
+
 # Symlink global CLAUDE.md
 if [ -L ~/.claude/CLAUDE.md ] || [ -e ~/.claude/CLAUDE.md ]; then
     echo "~/.claude/CLAUDE.md already exists. Remove it first if you want to reinstall."
