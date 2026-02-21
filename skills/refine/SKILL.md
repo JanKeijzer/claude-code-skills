@@ -29,7 +29,7 @@ FOLLOW ALL STEPS STRICTLY. NO SHORTCUTS.
 
 ## Phase 1: Understand Current State
 
-1. Fetch issue details: `gh issue view $ARGUMENTS --json title,body,labels,assignees`
+1. Fetch issue details: `~/.claude/bin/gh-save.sh /tmp/issue-$ARGUMENTS.json issue view $ARGUMENTS --json title,body,labels,assignees`, then use the Read tool to read it
 2. Assess what's already defined and what's missing:
    - Action-oriented title?
    - Clear context (why this change)?

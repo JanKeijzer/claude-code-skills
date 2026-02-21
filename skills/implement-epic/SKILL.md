@@ -62,8 +62,10 @@ The main session NEVER implements code itself. It only:
 ### Step 1: Read parent issue
 
 ```bash
-gh issue view $ARGUMENTS --json title,body,labels
+~/.claude/bin/gh-save.sh /tmp/epic-$ARGUMENTS.json issue view $ARGUMENTS --json title,body,labels
 ```
+
+Use the Read tool to read `/tmp/epic-$ARGUMENTS.json`.
 
 ### Step 2: Parse sub-issues and implementation order
 
@@ -145,10 +147,10 @@ git pull origin <feature_branch>
 #### Step 2: Fetch issue details
 
 ```bash
-gh issue view <N> --json title,body,labels
+~/.claude/bin/gh-save.sh /tmp/sub-issue-<N>.json issue view <N> --json title,body,labels
 ```
 
-Store the issue title and body — you need this for the sub-agent prompt.
+Use the Read tool to read `/tmp/sub-issue-<N>.json`. Store the issue title and body — you need this for the sub-agent prompt.
 
 #### Step 3: Spawn sub-agent via Task tool
 
@@ -185,7 +187,7 @@ Body: <full issue body>
    - Write PR body to /tmp/pr-body.md, then create PR:
      `gh pr create --title "<title>" --base <feature_branch> --body-file /tmp/pr-body.md`
    - Auto-merge: `gh pr merge <pr-number> --merge --delete-branch`
-   - Return to feature branch: `git checkout <feature_branch> && git pull origin <feature_branch>`
+   - Return to feature branch: `git checkout <feature_branch>`, then `git pull origin <feature_branch>`
 
 ## HARD BOUNDARIES
 - Your PR target is the FEATURE BRANCH (`<feature_branch>`) — NEVER target `main` or `develop`

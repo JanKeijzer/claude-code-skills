@@ -30,10 +30,10 @@ The user provides an issue number: `$ARGUMENTS`
 ### Step 1: Fetch and Analyze the Issue
 
 ```bash
-gh issue view $ARGUMENTS --json title,body,labels,milestone
+~/.claude/bin/gh-save.sh /tmp/issue-$ARGUMENTS.json issue view $ARGUMENTS --json title,body,labels,milestone
 ```
 
-Analyze the issue body to identify:
+Use the Read tool to read `/tmp/issue-$ARGUMENTS.json`. Analyze the issue body to identify:
 - **Phases/Sections**: Look for headers, checklists, numbered lists
 - **Dependencies**: Which tasks must complete before others
 - **Logical groupings**: Backend vs frontend, foundation vs features

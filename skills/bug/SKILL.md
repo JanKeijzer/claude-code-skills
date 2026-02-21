@@ -67,8 +67,10 @@ Parse:
 ### Step 3: Get Parent Issue Info
 
 ```bash
-gh issue view [parent-issue] --json number,title,labels
+~/.claude/bin/gh-save.sh /tmp/parent-issue.json issue view [parent-issue] --json number,title,labels
 ```
+
+Use the Read tool to read `/tmp/parent-issue.json`.
 
 ### Step 4: Find the Tracking PR
 
@@ -79,9 +81,9 @@ Search for the tracking/parent PR:
 
 If parent is a sub-issue (e.g., #724), also find the grandparent tracking PR:
 ```bash
-gh issue view [parent-issue] --json body
+~/.claude/bin/gh-save.sh /tmp/parent-issue-body.json issue view [parent-issue] --json body
 ```
-Then parse the JSON output for `Parent issue: #\d+` to find the grandparent issue number.
+Use the Read tool to read `/tmp/parent-issue-body.json` and find `Parent issue: #\d+` to get the grandparent issue number.
 
 ### Step 5: Create Bug Issue
 

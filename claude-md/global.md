@@ -55,7 +55,7 @@
 
 ## Claude Code Workarounds
 
-- Bash tool: always save API responses to a file first, then read the file
+- Bash tool: always save API responses to a file first, then read the file. Use `~/.claude/bin/gh-save.sh /tmp/output.json <gh-args>` to save `gh` output (shell redirects like `>` trigger permission prompts).
 - Never use command substitution with pipes for API data
 - Never write files via Bash (no `echo >`, `cat <<`, `tee`, heredoc). These don't match permission patterns like `Bash(git *)`. Instead: use the Write tool to write to `/tmp/`, then reference the file in Bash (e.g., `git commit -F /tmp/commit-msg`, `gh issue create --body-file /tmp/issue-body.md`).
 - Never use `python3 -c`, `sed`, or `awk` for file modifications. Use Grep to find occurrences, then Edit to replace them.

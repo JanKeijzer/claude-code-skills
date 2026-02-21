@@ -18,10 +18,10 @@ The user provides a PR number: `$ARGUMENTS`
 ### Step 1: Fetch Current PR
 
 ```bash
-gh pr view $ARGUMENTS --json number,title,body,state
+~/.claude/bin/gh-save.sh /tmp/pr-$ARGUMENTS.json pr view $ARGUMENTS --json number,title,body,state
 ```
 
-Extract from the PR body:
+Use the Read tool to read `/tmp/pr-$ARGUMENTS.json` and extract:
 - The parent issue number (from "Closes #XXX")
 - All sub-issue numbers (from the tracking table)
 - Current status of each sub-issue in the table

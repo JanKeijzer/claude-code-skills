@@ -30,8 +30,10 @@ The user provides a PR number: `$ARGUMENTS`
 ### Step 1: Fetch PR Body
 
 ```bash
-gh pr view $ARGUMENTS --json number,title,body,baseRefName
+~/.claude/bin/gh-save.sh /tmp/pr-$ARGUMENTS.json pr view $ARGUMENTS --json number,title,body,baseRefName
 ```
+
+Use the Read tool to read `/tmp/pr-$ARGUMENTS.json`.
 
 ### Step 2: Extract Current Closes Statements
 
@@ -143,10 +145,10 @@ If you need to check whether any referenced issues are already closed, fetch the
 ### Step 7: Verify
 
 ```bash
-gh pr view $ARGUMENTS --json body
+~/.claude/bin/gh-save.sh /tmp/pr-$ARGUMENTS-verify.json pr view $ARGUMENTS --json body
 ```
 
-Parse the JSON output to extract and list all `Closes #\d+` statements.
+Use the Read tool to read `/tmp/pr-$ARGUMENTS-verify.json` and extract all `Closes #\d+` statements.
 
 Show confirmation:
 ```markdown

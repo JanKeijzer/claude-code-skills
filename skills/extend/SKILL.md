@@ -52,10 +52,10 @@ PARENT_ISSUE=$(~/.claude/bin/extract-issue-from-branch.sh)
 ### Step 2: Fetch Parent Issue
 
 ```bash
-gh issue view $PARENT_ISSUE --json number,title,body,labels
+~/.claude/bin/gh-save.sh /tmp/issue-$PARENT_ISSUE.json issue view $PARENT_ISSUE --json number,title,body,labels
 ```
 
-Parse the issue body to identify:
+Use the Read tool to read `/tmp/issue-$PARENT_ISSUE.json`. Parse the issue body to identify:
 - All phases/sections/tasks defined
 - Checklists with `- [ ]` items
 - Numbered implementation steps

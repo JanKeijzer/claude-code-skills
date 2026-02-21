@@ -25,20 +25,18 @@ The user provides: `$ARGUMENTS`
 
 ## Implementation
 
-Use this command:
-```bash
-ls -lt ~/Pictures/Screenshots/*.* 2>/dev/null | head -[n]
+Use the Glob tool to find screenshots:
+```
+pattern: "*.*"
+path: "~/Pictures/Screenshots"
 ```
 
-Where `[n]` is the number from `$ARGUMENTS` or 5 if not provided.
+Glob returns files sorted by modification time (newest first). Take the first `[n]` results, where `[n]` is the number from `$ARGUMENTS` or 5 if not provided.
 
 ## Output
 
 Show for each file:
 - File path
-- File size
 - Date modified
-
-Sort by modification time (newest first).
 
 **IMPORTANT:** Only search ~/Pictures/Screenshots - do not search other directories like Desktop, Downloads, or Pictures root.

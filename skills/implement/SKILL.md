@@ -31,7 +31,7 @@ Follow the Test Quality Policy and Anti-Patterns from CLAUDE.md throughout all p
 
 ## Phase 1: Discovery & Planning
 
-1. Fetch issue details: `gh issue view $ARGUMENTS --json title,body,labels`
+1. Fetch issue details: `~/.claude/bin/gh-save.sh /tmp/issue-$ARGUMENTS.json issue view $ARGUMENTS --json title,body,labels`, then use the Read tool to read it
 2. Read AND verify understanding of existing code:
    * Read all CLAUDE.md files (root, frontend, backend if they exist)
    * Read the ACTUAL source files you plan to modify
