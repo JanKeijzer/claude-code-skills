@@ -51,7 +51,13 @@
 
       // ── System ────────────────────────────────────────────────
       "Bash(xdg-open *)",
-      "Read(~/Pictures/Screenshots/**)"
+      "Read(~/Pictures/Screenshots/**)",
+
+      // ── Temp files ──────────────────────────────────────────────
+      // Allow writing/editing temp files for commit messages, issue
+      // bodies, and other intermediary files.
+      "Write(/tmp/*)",
+      "Edit(/tmp/*)"
     ],
     "deny": [
       // ── Destructive operations ────────────────────────────────
@@ -59,7 +65,12 @@
       // ask for confirmation if these are ever needed.
       "Bash(rm -rf /)",
       "Bash(rm -rf /*)",
-      "Bash(rm -rf ~)"
+      "Bash(rm -rf ~)",
+
+      // ── Anti-patterns ──────────────────────────────────────────
+      // Prevent Claude from using python3 -c for file processing.
+      // Forces use of proper tools (Grep, Read, Edit) instead.
+      "Bash(python3 -c *)"
     ]
   }
 }
