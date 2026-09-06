@@ -24,6 +24,12 @@
 #                          `--repo owner/name` argument. Required.
 #   CHECKLIST_PATH_MATCH   Glob matched against $PWD, used when the command has
 #                          no --repo. Optional; no PWD fallback if unset.
+#   CHECKLIST_CMD_MATCH    Extended regex selecting the commands to inspect.
+#                          Default: bare `gh pr create|edit`. Override when the
+#                          project opens PRs through a wrapper script: the
+#                          wrapper's own name never contains `gh pr create`, so
+#                          the default silently skips the very call that needs
+#                          checking.
 #   CHECKLIST_START        Opening marker. Default: <!-- AGENT-REVIEW:START -->
 #   CHECKLIST_END          Closing marker. Default: <!-- AGENT-REVIEW:END -->
 #   CHECKLIST_TEMPLATE     Template path quoted in error messages.
@@ -50,6 +56,7 @@ set -euo pipefail
 
 REPO_MATCH="${CHECKLIST_REPO_MATCH:-}"
 PATH_MATCH="${CHECKLIST_PATH_MATCH:-}"
+CMD_MATCH="${CHECKLIST_CMD_MATCH:-(^|[;&|]|\s)gh\s+pr\s+(create|edit)\b}"
 START="${CHECKLIST_START:-<!-- AGENT-REVIEW:START -->}"
 END="${CHECKLIST_END:-<!-- AGENT-REVIEW:END -->}"
 TEMPLATE="${CHECKLIST_TEMPLATE:-.github/PULL_REQUEST_TEMPLATE.md}"
@@ -64,8 +71,8 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
 [ -z "$COMMAND" ] && exit 0
 
-# Only gh pr create / gh pr edit.
-echo "$COMMAND" | grep -qE '(^|[;&|]|\s)gh\s+pr\s+(create|edit)\b' || exit 0
+# Only the PR-opening commands this project uses (see CHECKLIST_CMD_MATCH).
+echo "$COMMAND" | grep -qE "$CMD_MATCH" || exit 0
 
 # --repo wins when present, otherwise fall back to the working directory.
 if echo "$COMMAND" | grep -qE -- '--repo[= ]'; then
