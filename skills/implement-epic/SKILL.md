@@ -631,6 +631,27 @@ npm run validate:all
 
 If validation fails, fix issues and commit directly to the feature branch.
 
+**Before committing anything here, check WHAT the validation changed.** Chains
+like `validate:all` typically end in a formatter and a code generator, and both
+WRITE to the tree. That churn is unrelated to the epic (regenerated API specs
+often differ only in unicode escaping), and this step is the one place the
+instruction above says to commit directly to a shared branch — so it is exactly
+where churn gets committed under a plausible-looking message.
+
+```bash
+git status --short          # anything you did not touch on purpose?
+git diff --stat             # churn is usually a large diff in a generated file
+```
+
+Revert generated-file churn (`git checkout -- <file>`) and commit only real
+fixes. If the diff is genuine (you changed a backend schema), regenerate
+deliberately and say so in the commit message.
+
+Scope the effort to what the epic actually touched: a check that cannot fail
+because of this epic's diff is wall-clock, not evidence. If the whole epic was
+frontend-only, the backend validators and the throwaway backend venv rebuild
+prove nothing — prefer the project's scoped variant where one exists.
+
 ### Step 2: Scoped regression tests
 
 Do NOT run the full test suite — sub-agents already ran their relevant tests.

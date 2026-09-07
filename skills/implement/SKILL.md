@@ -109,6 +109,39 @@ The orchestrator (main session) only:
 - Receives a structured summary
 - Decides whether to proceed to Phase 4 or fix issues
 
+### Step 0: Scope the verification to the diff's blast radius
+
+MANDATORY means "verify with fresh evidence", not "always run everything". Run
+the checks that could actually fail because of THIS diff. A check that cannot
+fail from the change is not evidence; it is wall-clock.
+
+Classify the diff first:
+
+**Test-only diff** — every changed file is a test, fixture, scanner or snapshot,
+and no file ships to a container or user. Then the test IS the subject, there is
+no runtime surface to diverge from, and the strongest available evidence is:
+
+1. the targeted test file(s), green;
+2. a mutation probe per behavioural claim (break it, confirm the intended check
+   goes red, revert) — this is the step that separates a real fix from a green
+   stamp, and it is cheap;
+3. one A/B of the affected test(s) on base vs branch.
+
+Do NOT run the full suite or the full validate chain for this class. Prefer the
+project's changed-files test selection (e.g. `vitest run --changed=origin/<base>`)
+plus any repo-wide scanner tests, which read the whole tree and so are not
+selected by `--changed`. Skip the sub-agent when the above fits in a handful of
+calls; run the probes inline and report them.
+
+**Everything else** — anything that reaches a container, a user, an API, a
+schema or a migration. Full Phase 3 below applies unchanged, including the
+container check: a green suite is not a claim that the running app works.
+
+Never invoke a formatter or generator as verification. Commands like
+`npm run format` and OpenAPI regeneration MUTATE the tree, producing unrelated
+churn you then have to revert and risk committing. Use the check-only variant
+(`--check`, `generate:check`, `lint`) instead.
+
 ### Step 1: Gather context for the sub-agent
 
 Before spawning, collect:
