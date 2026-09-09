@@ -84,13 +84,15 @@ Issues within the same wave are implemented sequentially (each needs the branch 
 
 ### Step 4: Prepare project context for sub-agents
 
-Copy all CLAUDE.md files to `/tmp/` so sub-agents can lazy-load them (avoids embedding 20-30 KB of identical context in every sub-agent prompt):
+Copy the project's CLAUDE.md files to a temp location so sub-agents can lazy-load them (avoids embedding 20-30 KB of identical context in every sub-agent prompt):
 
 ```bash
-cp CLAUDE.md /tmp/epic-claude-root.md
-cp frontend/CLAUDE.md /tmp/epic-claude-frontend.md 2>/dev/null || true
-cp backend/app/CLAUDE.md /tmp/epic-claude-backend.md 2>/dev/null || true
+~/.claude/bin/epic-prepare-context.sh $ARGUMENTS
 ```
+
+The script prints the destination prefix on stdout — store it as `context_prefix` (e.g. `/tmp/epic-otia-632-claude`). On stderr it lists which sections it copied and from which source path, because doc layouts differ per project (`backend/CLAUDE.md` vs `backend/app/CLAUDE.md`, `frontend/CLAUDE.md` vs `src/CLAUDE.md`).
+
+**Only list a section in a sub-agent prompt if the script reported copying it.** A missing context file is harmless — the sub-agent reads the repo's CLAUDE.md itself. Pointing an agent at a path that holds nothing, or worse another project's doc, makes it treat foreign architecture as this project's. The prefix is namespaced per project and epic, and stale destinations are cleared on every run, so cross-project contamination cannot occur through this path.
 
 Also read the root CLAUDE.md yourself to extract the **one-line tech stack summary** and **test/validation commands** — store these as `project_summary` (max 5 lines). This small summary goes into every sub-agent prompt; the full CLAUDE.md files are read by the sub-agent on demand.
 
@@ -222,10 +224,10 @@ Body: <full issue body>
 <project_summary — max 5 lines: tech stack, test command, validation command>
 
 Project policies are in these files — read them BEFORE writing code:
-- /tmp/epic-claude-root.md (project overview, naming conventions, dev commands)
-- /tmp/epic-claude-frontend.md (frontend architecture — read if modifying frontend)
-- /tmp/epic-claude-backend.md (backend architecture — read if modifying backend)
-Read only the files relevant to your issue. Do NOT skip this step.
+- <context_prefix>-root.md (project overview, naming conventions, dev commands)
+- <context_prefix>-frontend.md (frontend architecture — read if modifying frontend)
+- <context_prefix>-backend.md (backend architecture — read if modifying backend)
+List only the sections Phase 0 reported as copied. Read only the files relevant to your issue. Do NOT skip this step.
 
 ## Branch Setup
 - Feature branch: <feature_branch>
@@ -362,8 +364,8 @@ Body: <full issue body>
 <project_summary — max 5 lines: tech stack, test command, validation command>
 
 Project policies are in these files — read them BEFORE starting your audit:
-- /tmp/epic-claude-root.md (project overview, naming conventions)
-- /tmp/epic-claude-backend.md (backend architecture, security patterns)
+- <context_prefix>-root.md (project overview, naming conventions)
+- <context_prefix>-backend.md (backend architecture, security patterns)
 Read only the files relevant to your audit domain. Do NOT skip this step.
 
 ## Audit Instructions
@@ -618,9 +620,9 @@ Spawn a background agent:
 You are verifying the feature branch `<feature_branch>` after all sub-issues have been merged.
 
 Project policies are in these files — read them BEFORE starting:
-- /tmp/epic-claude-root.md (project overview, dev commands)
-- /tmp/epic-claude-backend.md (backend architecture — if backend changes)
-- /tmp/epic-claude-frontend.md (frontend architecture — if frontend changes)
+- <context_prefix>-root.md (project overview, dev commands)
+- <context_prefix>-backend.md (backend architecture — if backend changes)
+- <context_prefix>-frontend.md (frontend architecture — if frontend changes)
 
 ### Step 1: Run project validation
 
@@ -706,7 +708,7 @@ Spawn a background agent:
 You are verifying that the application works at runtime after all sub-issues for epic #<epic_number> have been merged into `<feature_branch>`.
 
 Project policies are in these files — read them BEFORE starting:
-- /tmp/epic-claude-root.md (project overview, dev commands)
+- <context_prefix>-root.md (project overview, dev commands)
 
 ### Step 1: Rebuild containers if dependencies changed
 
@@ -822,8 +824,8 @@ RESULT: PASS/FAIL/SKIP — <details>
 You are writing and running a minimal Playwright smoke test to verify that the UI changes from epic #<epic_number> work at runtime.
 
 Project policies are in these files — read them BEFORE starting:
-- /tmp/epic-claude-root.md (project overview)
-- /tmp/epic-claude-frontend.md (frontend architecture, testing patterns)
+- <context_prefix>-root.md (project overview)
+- <context_prefix>-frontend.md (frontend architecture, testing patterns)
 
 ### Step 1: Determine the epic's UI domain
 
